@@ -8,6 +8,15 @@
 use Drush\Log\LogLevel;
 
 /**
+ * Implements hook_drush_help_alter().
+ */
+function composercheck_drush_help_alter(&$command) {
+  if ($command['command'] == 'pm-download') {
+    $command['options']['pm-force'] = 'Allow downloading modules if composer is managing dependencies';
+  }
+}
+
+/**
  * Load the project's composer.json.
  *
  * @return array|false
@@ -27,6 +36,23 @@ function _composercheck_get_composer_json() {
 
   drush_log(dt('composer.json not found in project'), LogLevel::DEBUG);
   return FALSE;
+}
+
+/**
+ * Implements drush_hook_COMMAND_validate().
+ *
+ * Prevent download of modules if dependencies managed by composer.
+ */
+function drush_composercheck_pm_download_validate() {
+
+  if (drush_get_option('pm-force')) {
+    return;
+  }
+
+  $composerJson = _composercheck_get_composer_json();
+  if (!empty($composerJson)) {
+    drush_set_error('COMPOSER_MANAGED', dt('This project uses composer to manage dependencies. To download a module use `composer require`. To override this restriction use the --pm-force option.'));
+  }
 }
 
 /**
