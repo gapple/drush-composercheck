@@ -8,25 +8,36 @@
 use Drush\Log\LogLevel;
 
 /**
- * Implements drush_hook_COMMAND_validate().
+ * Load the project's composer.json.
  *
- * Prevent update for composer-managed dependencies.
+ * @return array|false
+ *   The composer.json data, or FALSE if not found.
  */
-function drush_composercheck_pm_updatecode_validate() {
-
+function _composercheck_get_composer_json() {
   // Find the closest composer.json to the Drupal root directory.
   $drupalRoot = drush_get_context('DRUSH_DRUPAL_ROOT');
   for ($pathRel = 0; $pathRel <= 1; $pathRel++) {
     $composerJsonPath = $drupalRoot . str_repeat('/..', $pathRel) . '/composer.json';
-    drush_log(dt('Checking @path', ['@path' => $composerJsonPath]), LogLevel::DEBUG);
+    drush_log(dt('Checking for @path', ['@path' => $composerJsonPath]), LogLevel::DEBUG);
     if (file_exists($composerJsonPath)) {
-      $composerJson = json_decode(file_get_contents($composerJsonPath), TRUE);
-      break;
+      drush_log(dt('Found @path', ['@path' => $composerJsonPath]), LogLevel::DEBUG);
+      return json_decode(file_get_contents($composerJsonPath), TRUE);
     }
   }
 
+  drush_log(dt('composer.json not found in project'), LogLevel::DEBUG);
+  return FALSE;
+}
+
+/**
+ * Implements drush_hook_COMMAND_validate().
+ *
+ * Prevent code update for composer-managed dependencies.
+ */
+function drush_composercheck_pm_updatecode_validate() {
+
+  $composerJson = _composercheck_get_composer_json();
   if (empty($composerJson)) {
-    drush_log(dt('composer.json not found in project'), LogLevel::DEBUG);
     return;
   }
 
