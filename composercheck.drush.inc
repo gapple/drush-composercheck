@@ -36,9 +36,19 @@ function drush_composercheck_pm_updatecode_validate() {
     return;
   }
 
+  $requireTypes = array_filter(
+    ['require', 'require-dev'],
+    function ($key) use ($composerJson) {
+      return array_key_exists($key, $composerJson);
+    }
+  );
+
   foreach ($projects as $project) {
-    if (array_key_exists('drupal/' . $project, $composerJson['require'])) {
-      drush_set_error('COMPOSER_MANAGED', dt('@project is managed by composer.  Use `composer upgrade drupal/@project` to update.', ['@project' => $project]));
+    foreach ($requireTypes as $requireType) {
+      if (array_key_exists('drupal/' . $project, $composerJson[$requireType])) {
+        drush_set_error('COMPOSER_MANAGED', dt('@project is managed by composer.  Use `composer upgrade drupal/@project` to update.', ['@project' => $project]));
+        break;
+      }
     }
   }
 }
