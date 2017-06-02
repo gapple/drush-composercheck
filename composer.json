@@ -1,0 +1,9 @@
+{
+  "name": "gapple/drush-composercheck",
+  "description": "Prevent execution of certain drush commands when project uses composer for dependency management",
+  "type": "drupal-drush",
+  "license": "MIT",
+  "require-dev": {
+    "drush/drush": "^8.0"
+  }
+}
